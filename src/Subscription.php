@@ -518,16 +518,11 @@ class Subscription extends Model
      * @param  Int  $subscriptionId
      * @return date
      */
-    public static function checkAll($gateway)
+    public static function checkAll()
     {
-        // check plans
-        if (method_exists($gateway, 'checkAll')) {
-            $gateway->checkAll();
-        }
-        
         $subscriptions = self::whereNull('ends_at')->orWhere('ends_at', '>=', \Carbon\Carbon::now())->get();
         foreach ($subscriptions as $subscription) {
-            $subscription->check($gateway);
+            $subscription->check();
         }
     }
 
@@ -537,22 +532,20 @@ class Subscription extends Model
      * @param  Int  $subscriptionId
      * @return date
      */
-    public function check($gateway)
+    public function check()
     {
-        // check expired
-        if (isset($this->ends_at) && \Carbon\Carbon::now()->endOfDay() > $this->ends_at) {
-            $this->cancelNow();
+        if ($this->status === self::STATUS_ACTIVE) {
+            // check expired
+            if ($this->isExpired() || $this->isCurrentExpired()) {
+                $this->cancelNow();
 
-            // add log
-            $this->addLog(SubscriptionLog::TYPE_EXPIRED, [
-                'plan' => $this->plan->getBillableName(),
-                'price' => $this->plan->getBillableFormattedPrice(),
-            ]);
-        }
-
-        // gateway service check subscription
-        if(method_exists ( $gateway , 'check' )) {
-            $gateway->check($this);
+                // add log
+                $this->addLog(SubscriptionLog::TYPE_EXPIRED, [
+                    'plan' => $this->plan->getBillableName(),
+                    'price' => $this->plan->getBillableFormattedPrice(),
+                ]);
+                return;
+            }
         }
     }
 
