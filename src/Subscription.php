@@ -271,6 +271,17 @@ class Subscription extends Model
     }
 
     /**
+     * Check if current subscription period is expired.
+     *
+     * @param  Int  $subscriptionId
+     * @return date
+     */
+    public function isCurrentExpired()
+    {
+        return isset($this->current_period_ends_at) && \Carbon\Carbon::now()->endOfDay() > $this->current_period_ends_at;
+    }
+
+    /**
      * Determine if the subscription is ended.
      *
      * @return bool
