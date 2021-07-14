@@ -260,6 +260,17 @@ class Subscription extends Model
     }
 
     /**
+     * Check if subscription is expired.
+     *
+     * @param  Int  $subscriptionId
+     * @return date
+     */
+    public function isExpired()
+    {
+        return isset($this->ends_at) && \Carbon\Carbon::now()->endOfDay() > $this->ends_at;
+    }
+
+    /**
      * Determine if the subscription is ended.
      *
      * @return bool
